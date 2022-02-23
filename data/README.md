@@ -1,5 +1,5 @@
 # data folder
-contains training_data.mat, testing_data.mat and training_RSS_minmax.mat
+The folder contains training_data.mat, testing_data.mat and training_RSS_minmax.mat
 
 training_data.mat have 40,000 samples
 testing_data.mat have 5,000 samples
