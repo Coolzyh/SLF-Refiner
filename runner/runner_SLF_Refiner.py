@@ -266,14 +266,14 @@ class runner_SLF_Refiner():
             slf_coarse = slf_coarse.to(self.device)
             target_slf = target_slf.to(self.device)
             slf_recon = model(input_rss, slf_coarse)
-            # save one image for paper show
-            if batch_idx == 2:
-                clean_slf = target_slf.view(target_slf.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-                enr_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-                refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-                np.save('results/compare/' + 'slf_target_sample.npy', clean_slf)
-                np.save('results/compare/'+'slf_enr_sample.npy', enr_slf)
-                np.save('results/compare/' + 'slf_enr_refine_sample.npy', refine_slf)
+            # # save one image for paper show
+            # if batch_idx == 2:
+            #     clean_slf = target_slf.view(target_slf.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
+            #     enr_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
+            #     refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
+            #     np.save('results/compare/' + 'slf_target_sample.npy', clean_slf)
+            #     np.save('results/compare/'+'slf_enr_sample.npy', enr_slf)
+            #     np.save('results/compare/' + 'slf_enr_refine_sample.npy', refine_slf)
 
 
             # plot SLF reconstruction image
@@ -476,12 +476,12 @@ class runner_SLF_Refiner():
             slf_coarse = coarse_estimator(input_rss)
             slf_recon = model(input_rss, slf_coarse)
 
-            # save one image for paper show
-            if batch_idx == 2:
-                attcnn_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-                refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-                np.save('results/compare/' + 'slf_attcnn_sample.npy', attcnn_slf)
-                np.save('results/compare/' + 'slf_attcnn_refine_sample.npy', refine_slf)
+            # # save one image for paper show
+            # if batch_idx == 2:
+            #     attcnn_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
+            #     refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
+            #     np.save('results/compare/' + 'slf_attcnn_sample.npy', attcnn_slf)
+            #     np.save('results/compare/' + 'slf_attcnn_refine_sample.npy', refine_slf)
 
             # plot SLF reconstruction image
             n = min(input_rss.size(0), 8)
@@ -688,12 +688,12 @@ class runner_SLF_Refiner():
             slf_coarse = torch.reshape(slf_coarse, (-1, 1, self.args.K0, self.args.K1))
             slf_recon = model(input_rss, slf_coarse)
 
-            # save one image for paper show
-            if batch_idx == 2:
-                mtae_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-                refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-                np.save('results/compare/' + 'slf_mtae_sample.npy', mtae_slf)
-                np.save('results/compare/' + 'slf_mtae_refine_sample.npy', refine_slf)
+            # # save one image for paper show
+            # if batch_idx == 2:
+            #     mtae_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
+            #     refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
+            #     np.save('results/compare/' + 'slf_mtae_sample.npy', mtae_slf)
+            #     np.save('results/compare/' + 'slf_mtae_refine_sample.npy', refine_slf)
 
             # plot SLF reconstruction image
             n = min(input_rss.size(0), 8)
