@@ -1,2 +1,4 @@
-# SLF-Refiner-draft
-The draft code for SLF refiner paper
+# SLF-Refiner
+The code for IEEE SPL paper
+
+Improving Radio Tomographic Imaging Accuracy by Attention Augmented Optimization Technique
