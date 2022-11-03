@@ -74,14 +74,14 @@ class AugmentedConv(nn.Module):
         # (batch_size, Nh, dvh or dkh, height * width)
         # dvh = dv / Nh, dkh = dk / Nh
         # q, k, v
-        # (batch_size, Nh, dv or dk, height, width)
+        # (batch_size, Nh, dvh or dkh, height, width)
         flat_q, flat_k, flat_v, q, k, v = self.compute_flat_qkv(x, self.dk, self.dv, self.Nh)
         logits = torch.matmul(flat_q.transpose(2, 3), flat_k)
         if self.relative:
             h_rel_logits, w_rel_logits = self.relative_logits(q)
             logits += h_rel_logits
             logits += w_rel_logits
-        weights = F.softmax(logits/math.sqrt(self.dk/self.Nh), dim=-1)
+        weights = F.softmax(logits, dim=-1)
 
         # attn_out
         # (batch, Nh, height * width, dvh)
@@ -123,6 +123,8 @@ class AugmentedConv(nn.Module):
         B, Nh, dk, H, W = q.size()
         q = torch.transpose(q, 2, 4).transpose(2, 3)
 
+        # q: (B, Nh, H, W, dkh)
+        # self.key_rel_w: (2W-1, dkh)
         rel_logits_w = self.relative_logits_1d(q, self.key_rel_w, H, W, Nh, "w")
         rel_logits_h = self.relative_logits_1d(torch.transpose(q, 2, 3), self.key_rel_h, W, H, Nh, "h")
 
@@ -130,6 +132,7 @@ class AugmentedConv(nn.Module):
 
     def relative_logits_1d(self, q, rel_k, H, W, Nh, case):
         rel_logits = torch.einsum('bhxyd,md->bhxym', q, rel_k)
+        # rel_logits = q.matmul(rel_k.transpose(-1, -2))
         rel_logits = torch.reshape(rel_logits, (-1, Nh * H, W, 2 * W - 1))
         rel_logits = self.rel_to_abs(rel_logits)
 

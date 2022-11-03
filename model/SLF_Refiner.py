@@ -86,7 +86,7 @@ class Encoder(nn.Module):
         self.conv4 = nn.Conv2d(64, 128, 3, padding=0)                 # shape: [batch_size, 128, K0/4-2, K1/4-2]
         self.bn3 = nn.BatchNorm2d(128)
         self.augmented_conv2 = AugmentedConv(in_channels=128, out_channels=128, kernel_size=3, dk=256, dv=32,
-                                               Nh=2)  # shape: [batch_size, 128, K0/4-2, K1/4-2]
+                                             Nh=2)  # shape: [batch_size, 128, K0/4-2, K1/4-2]
         # self.augmented_conv2 = nn.Conv2d(128, 128, 3, padding=1)  # shape: [batch_size, 128, K0/4-2, K1/4-2]
         self.gamma2 = nn.Parameter(torch.zeros(1))
         self.bn4 = nn.BatchNorm2d(128)
@@ -159,7 +159,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.K = K  # dimension of SLF image
         # input: x, generator_x, encoder_x
-        # size: [1, K0, K1], 1024, [128, K0/8-1, K1/8-1]
+        # size: [1, K0, K1], [batch_size, 128, P-2, P-2], [128, K0/8-1, K1/8-1]
         self.conv1 = conv_layer(128, 128, 3, padding=1)
         self.conv2 = conv_layer(256, 256, 3, padding=1)  # shape: [batch_size, 256, 4, 4]
         self.conv3 = conv_layer(256, 512, 3, padding=1)  # shape: [batch_size, 512, 4, 4]
@@ -184,4 +184,3 @@ class Decoder(nn.Module):
         out = out.view(-1, 1, self.K[0], self.K[1])
         out = torch.sigmoid(out)
         return out
-    
