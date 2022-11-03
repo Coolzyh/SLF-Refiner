@@ -2,6 +2,7 @@ import numpy as np
 import os
 import torch
 import torch.optim as optim
+import torch.nn as nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from torchvision.utils import save_image
@@ -10,6 +11,27 @@ from model.CNN_Attn import CNN_Attn
 from model.MTAE import MTAE
 import random
 import scipy.io as sio
+# from ptflops import get_model_complexity_info
+
+
+# Define regularization term
+# Total variation
+class TVLoss(nn.Module):
+    def __init__(self, weight: float = 1) -> None:
+        """Total Variation Loss
+
+        Args:
+            weight (float): weight of TV loss
+        """
+        super().__init__()
+        self.weight = weight
+
+    def forward(self, x):
+        batch_size, c, h, w = x.size()
+        tv_h = torch.abs(x[:, :, 1:, :] - x[:, :, :-1, :]).sum()
+        tv_w = torch.abs(x[:, :, :, 1:] - x[:, :, :, :-1]).sum()
+        # return sum TV loss of the whole batch
+        return self.weight * (tv_h + tv_w) / (c * h * w)
 
 
 # runner for SLF-Refiner
@@ -65,7 +87,7 @@ class runner_SLF_Refiner():
                                                   generator=torch.Generator().manual_seed(self.args.seed))
 
         # Load testing data
-        testing_data = sio.loadmat('./data/testing_data.mat')
+        testing_data = sio.loadmat('./data/testing_data_normalized_ellipse_model_ENR_known.mat')
         # noise level classes (shape: [num_sample, 1]) (classes: 0, 1, 2)
         noise_class = testing_data['sig_epsilon_class']
         noise_class = np.squeeze(noise_class)
@@ -123,6 +145,12 @@ class runner_SLF_Refiner():
             optimizer.zero_grad()
             slf_recon = model(input_rss, slf_coarse)
             loss = F.binary_cross_entropy(slf_recon, target_slf, reduction='sum')/(self.args.K0*self.args.K1)
+
+            # # regularize term
+            # reg_tv = TVLoss(weight=0.1)
+            # reg_loss = reg_tv(slf_recon)
+            # loss += reg_loss
+
             train_loss += loss.item()
 
             mse1 = F.mse_loss(slf_coarse, target_slf, reduction='sum')/(self.args.K0*self.args.K1)
@@ -250,6 +278,13 @@ class runner_SLF_Refiner():
     def test_model(self, noise_level='all'):
         print("Start testing SLF refiner for ENR estimator!")
         model = SLF_Refiner(M=self.args.M, P=self.args.P, K=(self.args.K0, self.args.K1))
+
+        # macs, params = get_model_complexity_info(model.encoder, (1, 40, 40), as_strings=True,
+        #                                          print_per_layer_stat=True, verbose=True)
+        # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+        # return
+
         model = model.to(self.device)
         path_save = self.path + 'ENR/'
         model_path = path_save + 'SLF_Refiner_' + str(self.args.n_epochs_Refiner) + '.pth'
@@ -266,15 +301,14 @@ class runner_SLF_Refiner():
             slf_coarse = slf_coarse.to(self.device)
             target_slf = target_slf.to(self.device)
             slf_recon = model(input_rss, slf_coarse)
-            # # save one image for paper show
-            # if batch_idx == 2:
-            #     clean_slf = target_slf.view(target_slf.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-            #     enr_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-            #     refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[6].detach().cpu().numpy()
-            #     np.save('results/compare/' + 'slf_target_sample.npy', clean_slf)
-            #     np.save('results/compare/'+'slf_enr_sample.npy', enr_slf)
-            #     np.save('results/compare/' + 'slf_enr_refine_sample.npy', refine_slf)
-
+            # save one image for paper show
+            if batch_idx == 3:
+                clean_slf = target_slf.view(target_slf.size(0), self.args.K0, self.args.K1)[0].detach().cpu().numpy()
+                enr_slf = slf_coarse.view(slf_coarse.size(0), self.args.K0, self.args.K1)[0].detach().cpu().numpy()
+                refine_slf = slf_recon.view(slf_recon.size(0), self.args.K0, self.args.K1)[0].detach().cpu().numpy()
+                np.save('results/compare/' + 'slf_target_sample.npy', clean_slf)
+                np.save('results/compare/'+'slf_enr_sample.npy', enr_slf)
+                np.save('results/compare/' + 'slf_enr_refine_sample.npy', refine_slf)
 
             # plot SLF reconstruction image
             n = min(input_rss.size(0), 8)
@@ -381,7 +415,8 @@ class runner_SLF_Refiner():
         for batch_idx, (input_rss, _, target_slf) in enumerate(test_loader):
             input_rss = input_rss.to(self.device)
             target_slf = target_slf.to(self.device)
-            slf_coarse = coarse_estimator(input_rss)
+            with torch.no_grad():
+                slf_coarse = coarse_estimator(input_rss)
             slf_recon = model(input_rss, slf_coarse)
             loss = F.binary_cross_entropy(slf_recon, target_slf, reduction='sum') / (self.args.K0 * self.args.K1)
             test_loss += loss.item()
@@ -412,6 +447,8 @@ class runner_SLF_Refiner():
         coarse_estimator_path = path_save + 'CNN_Attn_' + str(self.args.n_epochs_CNN_Attn) + '.pth'
         coarse_estimator.load_state_dict(torch.load(coarse_estimator_path, map_location=self.device))
         coarse_estimator.eval()
+        for param in coarse_estimator.parameters():
+            param.requires_grad = False
 
         train_loader, val_loader, test_loader = self.load_data()
         optimizer = self.get_optimizer(model.parameters())
@@ -522,7 +559,8 @@ class runner_SLF_Refiner():
             input_rss = input_rss.to(self.device)
             target_slf = target_slf.to(self.device)
             optimizer.zero_grad()
-            _, slf_coarse, *_ = coarse_estimator(input_rss)
+            with torch.no_grad():
+                _, slf_coarse, *_ = coarse_estimator(input_rss)
             slf_coarse = torch.reshape(slf_coarse, (-1, 1, self.args.K0, self.args.K1))
             slf_recon = model(input_rss, slf_coarse)
             loss = F.binary_cross_entropy(slf_recon, target_slf, reduction='sum') / (self.args.K0 * self.args.K1)
@@ -622,6 +660,8 @@ class runner_SLF_Refiner():
         coarse_estimator_path = path_save + 'MTAE_' + str(self.args.n_epochs_MTAE) + '.pth'
         coarse_estimator.load_state_dict(torch.load(coarse_estimator_path, map_location=self.device))
         coarse_estimator.eval()
+        for param in coarse_estimator.parameters():
+            param.requires_grad = False
 
         train_loader, val_loader, test_loader = self.load_data()
         optimizer = self.get_optimizer(model.parameters())

@@ -10,6 +10,8 @@ import random
 import scipy.io as sio
 from torchinfo import summary
 
+# from ptflops import get_model_complexity_info
+
 
 # runner for Multi-task AE
 class runner_MTAE():
@@ -74,7 +76,7 @@ class runner_MTAE():
                                                   generator=torch.Generator().manual_seed(self.args.seed))
 
         # Load testing data
-        testing_data = sio.loadmat('./data/testing_data.mat')
+        testing_data = sio.loadmat('./data/testing_data_normalized_ellipse_model_ENR_known.mat')
         # noise level classes (shape: [num_sample, 1]) (classes: 0, 1, 2)
         test_noise_class = testing_data['sig_epsilon_class']
         test_noise_class = np.squeeze(test_noise_class)
@@ -338,6 +340,13 @@ class runner_MTAE():
 
     def test_model(self, noise_level='all'):
         model = MTAE(M=self.args.M, P=self.args.P, K=(self.args.K0, self.args.K1))
+
+        # macs, params = get_model_complexity_info(model, (12, 6, 6), as_strings=True,
+        #                                          print_per_layer_stat=True, verbose=True)
+        # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+        # return
+
         model = model.to(self.device)
         model_path = self.path + 'MTAE_' + str(self.args.n_epochs_MTAE) + '.pth'
         model.load_state_dict(torch.load(model_path, map_location=self.device))

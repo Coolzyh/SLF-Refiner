@@ -9,6 +9,8 @@ from model.CNN_Attn import CNN_Attn
 import random
 import scipy.io as sio
 
+# from ptflops import get_model_complexity_info
+
 
 # runner for CNN-attention estimator
 class runner_CNN_Attn():
@@ -58,7 +60,7 @@ class runner_CNN_Attn():
                                                   generator=torch.Generator().manual_seed(self.args.seed))
 
         # Load testing data
-        testing_data = sio.loadmat('./data/testing_data.mat')
+        testing_data = sio.loadmat('./data/testing_data_normalized_ellipse_model_ENR_known.mat')
         # noise level classes (shape: [num_sample, 1]) (classes: 0, 1, 2)
         noise_class = testing_data['sig_epsilon_class']
         noise_class = np.squeeze(noise_class)
@@ -211,6 +213,13 @@ class runner_CNN_Attn():
 
     def test_model(self, noise_level='all'):
         model = CNN_Attn(M=self.args.M, P=self.args.P, K=(self.args.K0, self.args.K1))
+
+        # macs, params = get_model_complexity_info(model, (12, 6, 6), as_strings=True,
+        #                                          print_per_layer_stat=True, verbose=True)
+        # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+        # return
+
         model = model.to(self.device)
         model_path = self.path + 'CNN_Attn_' + str(self.args.n_epochs_CNN_Attn) + '.pth'
         model.load_state_dict(torch.load(model_path, map_location=self.device))
