@@ -7,7 +7,7 @@
 % b  :  bais.       alpha  :  path loss exponent
 % nodepos  :  coordinates of UWB node
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear; clc; close all; tic;
+clear; clc; close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % INPUTS %
 %%%%%%%%%%
@@ -25,7 +25,7 @@ imgorg = [0.5 0.5];        %lower left corner of the image [x y] (m)
 imgdims = [40 40];         %image size in pixels
 pixelsize = 0.1;           %l/w of each square pixel (m)
 dBwhite = 1;              %dB atten of a white pixel       
-wallcount_vec = [0 2 0 2 1 3]; %min/max for horizontal , vertical and square walls
+wallcount_vec = [0 2 0 2 1 3]; %min/max for vertical , horizontal and square walls
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -54,6 +54,7 @@ end
 nodepos = NaN(2,N_Tw,N_Link);     
 d = NaN(N_Link*N_Tw,1);                 %distance of UWB node for each measurements
 W = NaN(N_Link*N_Tw,K);                 %weight of slf
+W_ENR = NaN(N_Link*N_Tw,K);             %weight of slf for mismatched experiments
 Z = zeros(N_Link*N_Tw,N_Link);          %weight of bias
 
 %node position calculation
@@ -73,7 +74,10 @@ end
 %generate weight and distance
 for N_Linki = 1:N_Link
     W((N_Linki-1)*N_Tw+1:N_Linki*N_Tw,:) = ...
-        f_gen_Wi_ellipse(nodepos(:,:,N_Linki),pixelsize,imgorg,imgdims,1,2);     %all weight per link
+        f_gen_Wi_ellipse(nodepos(:,:,N_Linki),pixelsize,imgorg,imgdims,1,2);
+        % Inverse Area Elliptical Model
+%     W((N_Linki-1)*N_Tw+1:N_Linki*N_Tw,:) = ...
+%         f_gen_Wi(nodepos(:,:,N_Linki),pixelsize,imgorg,imgdims,1,2);     % Normalized Ellipse Model
     di = abs( nodepos(1,:,N_Linki) - nodepos(2,:,N_Linki) )';              %link lengths
     d((N_Linki-1)*N_Tw+1:N_Linki*N_Tw,1) = 20 * log10( di );
     Z((N_Linki-1)*N_Tw+1:N_Linki*N_Tw,N_Linki) = ones(N_Tw,1);

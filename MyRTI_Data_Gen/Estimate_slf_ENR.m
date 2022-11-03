@@ -3,6 +3,7 @@ cvx_begin quiet
     variable theta_en(K,1) nonnegative
     variable b_en(N_Link,1) nonnegative
     variable alpha_en(1,1) nonnegative
+    % For 2-norm form, please refer to http://cvxr.com/cvx/doc/advanced.html#eliminating-quadratic-forms
     minimize norm(RSS_noise - Z*b_en + 2*W*theta_en + d*alpha_en) +...
         lanpt1 * norm(theta_en,1) + lanpt2 * norm(Gamma * theta_en)
     subject to 
