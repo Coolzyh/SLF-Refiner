@@ -87,7 +87,7 @@ class runner_SLF_Refiner():
                                                   generator=torch.Generator().manual_seed(self.args.seed))
 
         # Load testing data
-        testing_data = sio.loadmat('./data/testing_data_normalized_ellipse_model_ENR_known.mat')
+        testing_data = sio.loadmat('./data/testing_data.mat')
         # noise level classes (shape: [num_sample, 1]) (classes: 0, 1, 2)
         noise_class = testing_data['sig_epsilon_class']
         noise_class = np.squeeze(noise_class)
@@ -279,7 +279,7 @@ class runner_SLF_Refiner():
         print("Start testing SLF refiner for ENR estimator!")
         model = SLF_Refiner(M=self.args.M, P=self.args.P, K=(self.args.K0, self.args.K1))
 
-        # macs, params = get_model_complexity_info(model.encoder, (1, 40, 40), as_strings=True,
+        # macs, params = get_model_complexity_info(model.generator, (12, 6, 6), as_strings=True,
         #                                          print_per_layer_stat=True, verbose=True)
         # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
         # print('{:<30}  {:<8}'.format('Number of parameters: ', params))

@@ -60,7 +60,7 @@ class runner_CNN_Attn():
                                                   generator=torch.Generator().manual_seed(self.args.seed))
 
         # Load testing data
-        testing_data = sio.loadmat('./data/testing_data_normalized_ellipse_model_ENR_known.mat')
+        testing_data = sio.loadmat('./data/testing_data.mat')
         # noise level classes (shape: [num_sample, 1]) (classes: 0, 1, 2)
         noise_class = testing_data['sig_epsilon_class']
         noise_class = np.squeeze(noise_class)
