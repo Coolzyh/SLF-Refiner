@@ -13,7 +13,7 @@ def arg_parser():
 
     parser.add_argument('--M', type=int, default=4, help='The number of RF nodes')
     parser.add_argument('--P', type=int, default=6, help='Each node has P measurement positions')
-    parser.add_argument('--N', type=int, default=6, help='The number of links: M*(M-1)/2')
+    parser.add_argument('--N', type=int, default=12, help='The number of links: M*(M-1)')
     parser.add_argument('--K0', type=int, default=40, help='SLF image dimension K[0]')
     parser.add_argument('--K1', type=int, default=40, help='SLF image dimension K[1]')
     # MTAE parameters
@@ -37,7 +37,7 @@ def arg_parser():
                         help='how many epochs to save model before logging training status')
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--weight_decay', type=float, default=0.00)
-    parser.add_argument('--pretrain', type=bool, default=False, metavar='P',
+    parser.add_argument('--pretrain', type=bool, default=True, metavar='P',
                         help='whether exists pretrained model (default: True)')
     args = parser.parse_args()
     args.N = int(args.M * (args.M - 1))
@@ -63,21 +63,21 @@ def main():
         # runner.train_save_with_cnn_attn()
         # runner.train_save_with_mtae()
     else:
-        # runner.test_model('all')
+        runner.test_model('all')
         runner.test_model('low')
-        # runner.test_model('mid')
-        # runner.test_model('high')
+        runner.test_model('mid')
+        runner.test_model('high')
         # runner.test_model_with_cnn_attn('all')
-        runner.test_model_with_cnn_attn('low')
+        # runner.test_model_with_cnn_attn('low')
         # runner.test_model_with_cnn_attn('mid')
         # runner.test_model_with_cnn_attn('high')
         # runner.test_model_with_mtae('all')
-        runner.test_model_with_mtae('low')
+        # runner.test_model_with_mtae('low')
         # runner.test_model_with_mtae('mid')
         # runner.test_model_with_mtae('high')
 
 
 if __name__ == '__main__':
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     main()
